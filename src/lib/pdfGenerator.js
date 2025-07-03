@@ -1,5 +1,6 @@
 
 import { jsPDF } from 'jspdf';
+import { hexToRgb } from './utils';
 
 export const generatePDF = async (data) => {
   const pdf = new jsPDF();
@@ -11,16 +12,6 @@ export const generatePDF = async (data) => {
   // Configurações de cores
   const primaryColor = hexToRgb(data.primaryColor);
   const secondaryColor = hexToRgb(data.secondaryColor);
-
-  // Helper function para converter hex para RGB
-  function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : { r: 59, g: 130, b: 246 };
-  }
 
   // Helper function para adicionar texto com quebra de linha
   function addText(text, x, y, maxWidth, fontSize = 10, style = 'normal') {
@@ -45,8 +36,8 @@ export const generatePDF = async (data) => {
     if (data.companyLogo) {
       try {
         pdf.addImage(data.companyLogo, 'JPEG', margin, yPosition, 30, 20);
-      } catch (error) {
-        console.warn('Erro ao adicionar logo:', error);
+      } catch {
+        // Ignora falhas ao adicionar a logo
       }
     }
 
