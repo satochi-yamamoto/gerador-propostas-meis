@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import ProposalPreview from '@/components/ProposalPreview';
 import { generatePDF } from '@/lib/pdfGenerator';
+import { USAGE_LIMIT } from '@/lib/utils';
+
+const LOGO_MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 const ProposalGenerator = () => {
   const { toast } = useToast();
@@ -99,7 +102,7 @@ const ProposalGenerator = () => {
   const handleLogoUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
+      if (file.size > LOGO_MAX_SIZE) {
         toast({
           title: "Arquivo muito grande",
           description: "O logo deve ter no máximo 2MB.",
@@ -117,10 +120,10 @@ const ProposalGenerator = () => {
   };
 
   const checkUsageLimit = () => {
-    if (usageCount >= 3) {
+    if (usageCount >= USAGE_LIMIT) {
       toast({
         title: "Limite atingido",
-        description: "Você já gerou 3 propostas este mês. Limite será renovado no próximo mês.",
+        description: `Você já gerou ${USAGE_LIMIT} propostas este mês. Limite será renovado no próximo mês.`,
         variant: "destructive"
       });
       return false;
@@ -149,7 +152,7 @@ const ProposalGenerator = () => {
       
       toast({
         title: "PDF gerado com sucesso!",
-        description: `Proposta baixada. Você tem ${3 - newCount} gerações restantes este mês.`
+        description: `Proposta baixada. Você tem ${USAGE_LIMIT - newCount} gerações restantes este mês.`
       });
     } catch (error) {
       toast({
@@ -210,7 +213,7 @@ Para mais detalhes, vamos conversar!`;
               📱 Responsivo
             </div>
             <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-              {3 - usageCount} gerações restantes
+              {USAGE_LIMIT - usageCount} gerações restantes
             </div>
           </div>
         </motion.div>
@@ -535,7 +538,7 @@ Para mais detalhes, vamos conversar!`;
                   <Button
                     onClick={handleGeneratePDF}
                     className="flex-1 pulse-glow"
-                    disabled={usageCount >= 3}
+                    disabled={usageCount >= USAGE_LIMIT}
                   >
                     <Download size={16} className="mr-2" />
                     Gerar PDF
@@ -544,7 +547,7 @@ Para mais detalhes, vamos conversar!`;
                     onClick={handleShare}
                     variant="outline"
                     className="flex-1"
-                    disabled={usageCount >= 3}
+                    disabled={usageCount >= USAGE_LIMIT}
                   >
                     <Share2 size={16} className="mr-2" />
                     Compartilhar
