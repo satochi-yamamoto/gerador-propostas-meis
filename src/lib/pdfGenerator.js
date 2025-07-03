@@ -1,5 +1,5 @@
 
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 export const generatePDF = async (data) => {
   const pdf = new jsPDF();
