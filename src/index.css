@@ -1,0 +1,98 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: 220 90% 56%;
+  --primary-foreground: 220 90% 98%;
+  --secondary: 220 14.3% 95.9%;
+  --secondary-foreground: 220.9 39.3% 11%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 220 14.3% 95.9%;
+  --accent-foreground: 220.9 39.3% 11%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 220 90% 56%;
+  --background: 0 0% 100%;
+  --foreground: 220.9 39.3% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 220.9 39.3% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220.9 39.3% 11%;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen;
+}
+
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-xl;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
+}
+
+.proposal-preview {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+.proposal-preview h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.proposal-preview h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 20px 0 10px 0;
+}
+
+.proposal-preview p {
+  margin-bottom: 10px;
+}
+
+.proposal-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.proposal-preview th,
+.proposal-preview td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.proposal-preview th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.floating-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  to { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+}
