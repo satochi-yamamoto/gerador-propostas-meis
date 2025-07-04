@@ -15,6 +15,7 @@ Aplicação web para criação de propostas comerciais personalizadas para micro
 - [React](https://react.dev) + [Vite](https://vitejs.dev)
 - [Tailwind CSS](https://tailwindcss.com) e Radix UI
 - [jsPDF](https://github.com/parallax/jsPDF)
+- [Vercel Web Analytics](https://vercel.com/docs/analytics) e [Speed Insights](https://vercel.com/docs/speed-insights)
 
 ## Instalação
 ```bash
