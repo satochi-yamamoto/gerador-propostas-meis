@@ -216,7 +216,32 @@ export default defineConfig({
 				'@babel/traverse',
 				'@babel/generator',
 				'@babel/types'
-			]
-		}
+			],
+			output: {
+				manualChunks: {
+					// Vendor chunks
+					'react-vendor': ['react', 'react-dom'],
+					'radix-ui': [
+						'@radix-ui/react-alert-dialog',
+						'@radix-ui/react-avatar',
+						'@radix-ui/react-checkbox',
+						'@radix-ui/react-dialog',
+						'@radix-ui/react-dropdown-menu',
+						'@radix-ui/react-label',
+						'@radix-ui/react-slider',
+						'@radix-ui/react-slot',
+						'@radix-ui/react-tabs',
+						'@radix-ui/react-toast'
+					],
+					// Animation and utilities
+					'animation': ['framer-motion'],
+					'icons': ['lucide-react'],
+					'utils': ['clsx', 'class-variance-authority', 'tailwind-merge'],
+					// Heavy libraries (will be loaded dynamically)
+					'pdf-libs': ['jspdf', 'html2canvas']
+				}
+			}
+		},
+		chunkSizeWarningLimit: 1000
 	}
 });

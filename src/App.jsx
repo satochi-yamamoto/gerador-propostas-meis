@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Helmet } from 'react-helmet';
 import { Toaster } from '@/components/ui/toaster';
 import ProposalGenerator from '@/components/ProposalGenerator';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-function App() {
+const App = memo(() => {
   return (
     <>
       <Helmet>
@@ -22,6 +22,8 @@ function App() {
       </div>
     </>
   );
-}
+});
+
+App.displayName = 'App';
 
 export default App;
