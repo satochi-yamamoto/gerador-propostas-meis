@@ -1,19 +1,19 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Download, Share2, Palette, Upload, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { FileText, Download, Share2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import ProposalPreview from '@/components/ProposalPreview';
-import { generatePDF } from '@/lib/pdfGenerator';
+import ProposalPreviewWrapper from '@/components/ProposalPreviewWrapper';
 import { USAGE_LIMIT } from '@/lib/utils';
 
-const LOGO_MAX_SIZE = 2 * 1024 * 1024; // 2MB
+// Lazy load form components
+const CompanyForm = lazy(() => import('@/components/CompanyForm'));
+const ClientForm = lazy(() => import('@/components/ClientForm'));
+const ProposalDetailsForm = lazy(() => import('@/components/ProposalDetailsForm'));
+const ItemsForm = lazy(() => import('@/components/ItemsForm'));
+const CustomizationForm = lazy(() => import('@/components/CustomizationForm'));
 
 const ProposalGenerator = () => {
   const { toast } = useToast();
@@ -59,65 +59,50 @@ const ProposalGenerator = () => {
     setUsageCount(parseInt(count));
   }, []);
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = useCallback((field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
+  }, []);
 
-  const handleItemChange = (index, field, value) => {
-    const newItems = [...formData.items];
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value
-    };
-    
-    if (field === 'quantity' || field === 'unitPrice') {
-      newItems[index].total = newItems[index].quantity * newItems[index].unitPrice;
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      items: newItems
-    }));
-  };
+  const handleItemChange = useCallback((index, field, value) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = {
+        ...newItems[index],
+        [field]: value
+      };
+      
+      if (field === 'quantity' || field === 'unitPrice') {
+        newItems[index].total = newItems[index].quantity * newItems[index].unitPrice;
+      }
+      
+      return {
+        ...prev,
+        items: newItems
+      };
+    });
+  }, []);
 
-  const addItem = () => {
+  const addItem = useCallback(() => {
     setFormData(prev => ({
       ...prev,
       items: [...prev.items, { description: '', quantity: 1, unitPrice: 0, total: 0 }]
     }));
-  };
+  }, []);
 
-  const removeItem = (index) => {
-    if (formData.items.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.filter((_, i) => i !== index)
-      }));
-    }
-  };
-
-  const handleLogoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > LOGO_MAX_SIZE) {
-        toast({
-          title: "Arquivo muito grande",
-          description: "O logo deve ter no máximo 2MB.",
-          variant: "destructive"
-        });
-        return;
+  const removeItem = useCallback((index) => {
+    setFormData(prev => {
+      if (prev.items.length > 1) {
+        return {
+          ...prev,
+          items: prev.items.filter((_, i) => i !== index)
+        };
       }
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        handleInputChange('companyLogo', e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+      return prev;
+    });
+  }, []);
 
   const checkUsageLimit = () => {
     if (usageCount >= USAGE_LIMIT) {
@@ -144,7 +129,12 @@ const ProposalGenerator = () => {
     }
 
     try {
-      await generatePDF(formData);
+      // Dynamically import the PDF generation function
+      const { generatePDFLazy } = await import('@/lib/pdfGeneratorLazy');
+      const pdf = await generatePDFLazy(formData);
+      
+      // Save the PDF
+      pdf.save(`proposta-${formData.clientName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
       
       const newCount = usageCount + 1;
       setUsageCount(newCount);
@@ -155,6 +145,7 @@ const ProposalGenerator = () => {
         description: `Proposta baixada. Você tem ${USAGE_LIMIT - newCount} gerações restantes este mês.`
       });
     } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
       toast({
         title: "Erro ao gerar PDF",
         description: "Tente novamente em alguns instantes.",
@@ -228,341 +219,104 @@ Para mais detalhes, vamos conversar!`;
             <Card className="glass-effect">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Palette className="text-blue-600" size={20} />
+                  <FileText className="text-blue-600" size={20} />
                   Dados da Proposta
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="empresa" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="empresa">Empresa</TabsTrigger>
                     <TabsTrigger value="cliente">Cliente</TabsTrigger>
+                    <TabsTrigger value="proposta">Proposta</TabsTrigger>
                     <TabsTrigger value="itens">Itens</TabsTrigger>
                     <TabsTrigger value="config">Config</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="empresa" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="companyName">Nome da Empresa *</Label>
-                        <Input
-                          id="companyName"
-                          value={formData.companyName}
-                          onChange={(e) => handleInputChange('companyName', e.target.value)}
-                          placeholder="Sua Empresa LTDA"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="companyDocument">CNPJ/CPF</Label>
-                        <Input
-                          id="companyDocument"
-                          value={formData.companyDocument}
-                          onChange={(e) => handleInputChange('companyDocument', e.target.value)}
-                          placeholder="00.000.000/0001-00"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="companyPhone">Telefone</Label>
-                        <Input
-                          id="companyPhone"
-                          value={formData.companyPhone}
-                          onChange={(e) => handleInputChange('companyPhone', e.target.value)}
-                          placeholder="(11) 99999-9999"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="companyEmail">E-mail</Label>
-                        <Input
-                          id="companyEmail"
-                          type="email"
-                          value={formData.companyEmail}
-                          onChange={(e) => handleInputChange('companyEmail', e.target.value)}
-                          placeholder="contato@empresa.com"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="companyAddress">Endereço</Label>
-                      <Input
-                        id="companyAddress"
-                        value={formData.companyAddress}
-                        onChange={(e) => handleInputChange('companyAddress', e.target.value)}
-                        placeholder="Rua, número, bairro, cidade - UF"
+                    <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded"></div>}>
+                      <CompanyForm 
+                        formData={formData} 
+                        onInputChange={handleInputChange} 
+                        toast={toast} 
                       />
-                    </div>
-                    <div>
-                      <Label htmlFor="logo">Logo da Empresa</Label>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          id="logo"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="flex-1"
-                        />
-                        <Button variant="outline" size="sm">
-                          <Upload size={16} />
-                        </Button>
-                      </div>
-                      {formData.companyLogo && (
-                        <div className="mt-2">
-                          <img
-                            src={formData.companyLogo}
-                            alt="Logo preview"
-                            className="h-16 w-auto object-contain border rounded"
-                          />
-                        </div>
-                      )}
-                    </div>
+                    </Suspense>
                   </TabsContent>
 
                   <TabsContent value="cliente" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="clientName">Nome do Cliente *</Label>
-                        <Input
-                          id="clientName"
-                          value={formData.clientName}
-                          onChange={(e) => handleInputChange('clientName', e.target.value)}
-                          placeholder="Cliente LTDA"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="clientDocument">CNPJ/CPF</Label>
-                        <Input
-                          id="clientDocument"
-                          value={formData.clientDocument}
-                          onChange={(e) => handleInputChange('clientDocument', e.target.value)}
-                          placeholder="00.000.000/0001-00"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="clientPhone">Telefone</Label>
-                        <Input
-                          id="clientPhone"
-                          value={formData.clientPhone}
-                          onChange={(e) => handleInputChange('clientPhone', e.target.value)}
-                          placeholder="(11) 99999-9999"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="clientEmail">E-mail</Label>
-                        <Input
-                          id="clientEmail"
-                          type="email"
-                          value={formData.clientEmail}
-                          onChange={(e) => handleInputChange('clientEmail', e.target.value)}
-                          placeholder="cliente@email.com"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="clientAddress">Endereço</Label>
-                      <Input
-                        id="clientAddress"
-                        value={formData.clientAddress}
-                        onChange={(e) => handleInputChange('clientAddress', e.target.value)}
-                        placeholder="Rua, número, bairro, cidade - UF"
+                    <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded"></div>}>
+                      <ClientForm 
+                        formData={formData} 
+                        onInputChange={handleInputChange} 
                       />
-                    </div>
-                    <div>
-                      <Label htmlFor="proposalDescription">Descrição da Proposta</Label>
-                      <Textarea
-                        id="proposalDescription"
-                        value={formData.proposalDescription}
-                        onChange={(e) => handleInputChange('proposalDescription', e.target.value)}
-                        placeholder="Descreva brevemente o que está sendo proposto..."
-                        rows={3}
+                    </Suspense>
+                  </TabsContent>
+
+                  <TabsContent value="proposta" className="space-y-4">
+                    <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded"></div>}>
+                      <ProposalDetailsForm 
+                        formData={formData} 
+                        onInputChange={handleInputChange} 
                       />
-                    </div>
+                    </Suspense>
                   </TabsContent>
 
                   <TabsContent value="itens" className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">Serviços/Produtos</h3>
-                      <Button onClick={addItem} size="sm" variant="outline">
-                        <Plus size={16} className="mr-1" />
-                        Adicionar
-                      </Button>
-                    </div>
-                    
-                    {formData.items.map((item, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-4 border rounded-lg space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm">Item {index + 1}</span>
-                          {formData.items.length > 1 && (
-                            <Button
-                              onClick={() => removeItem(index)}
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <Label>Descrição *</Label>
-                          <Textarea
-                            value={item.description}
-                            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                            placeholder="Descreva o serviço ou produto..."
-                            rows={2}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <Label>Quantidade</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                            />
-                          </div>
-                          <div>
-                            <Label>Valor Unitário</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.unitPrice}
-                              onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                              placeholder="0,00"
-                            />
-                          </div>
-                          <div>
-                            <Label>Total</Label>
-                            <Input
-                              value={`R$ ${item.total.toFixed(2)}`}
-                              readOnly
-                              className="bg-gray-50"
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-lg">Valor Total:</span>
-                        <span className="font-bold text-xl text-blue-600">
-                          R$ {totalValue.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
+                    <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded"></div>}>
+                      <ItemsForm 
+                        formData={formData} 
+                        onItemChange={handleItemChange}
+                        onAddItem={addItem}
+                        onRemoveItem={removeItem}
+                      />
+                    </Suspense>
                   </TabsContent>
 
                   <TabsContent value="config" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="validityDays">Validade (dias)</Label>
-                        <Input
-                          id="validityDays"
-                          type="number"
-                          min="1"
-                          value={formData.validityDays}
-                          onChange={(e) => handleInputChange('validityDays', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="paymentTerms">Forma de Pagamento</Label>
-                        <Input
-                          id="paymentTerms"
-                          value={formData.paymentTerms}
-                          onChange={(e) => handleInputChange('paymentTerms', e.target.value)}
-                          placeholder="À vista, parcelado, etc."
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="primaryColor">Cor Primária</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="primaryColor"
-                            type="color"
-                            value={formData.primaryColor}
-                            onChange={(e) => handleInputChange('primaryColor', e.target.value)}
-                            className="w-16 h-10"
-                          />
-                          <Input
-                            value={formData.primaryColor}
-                            onChange={(e) => handleInputChange('primaryColor', e.target.value)}
-                            placeholder="#3b82f6"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="secondaryColor">Cor Secundária</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="secondaryColor"
-                            type="color"
-                            value={formData.secondaryColor}
-                            onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
-                            className="w-16 h-10"
-                          />
-                          <Input
-                            value={formData.secondaryColor}
-                            onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
-                            placeholder="#1e40af"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="observations">Observações</Label>
-                      <Textarea
-                        id="observations"
-                        value={formData.observations}
-                        onChange={(e) => handleInputChange('observations', e.target.value)}
-                        placeholder="Informações adicionais, termos e condições..."
-                        rows={4}
+                    <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded"></div>}>
+                      <CustomizationForm 
+                        formData={formData} 
+                        onInputChange={handleInputChange} 
                       />
-                    </div>
+                    </Suspense>
                   </TabsContent>
                 </Tabs>
-
-                {/* Botões de Ação */}
-                <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t">
-                  <Button
-                    onClick={handleGeneratePDF}
-                    className="flex-1 pulse-glow"
-                    disabled={usageCount >= USAGE_LIMIT}
-                  >
-                    <Download size={16} className="mr-2" />
-                    Gerar PDF
-                  </Button>
-                  <Button
-                    onClick={handleShare}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={usageCount >= USAGE_LIMIT}
-                  >
-                    <Share2 size={16} className="mr-2" />
-                    Compartilhar
-                  </Button>
-                  <Button
-                    onClick={() => setShowPreview(!showPreview)}
-                    variant="ghost"
-                    size="sm"
-                    className="lg:hidden"
-                  >
-                    {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </Button>
-                </div>
               </CardContent>
             </Card>
+
+            {/* Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="mt-6 flex flex-col sm:flex-row gap-4"
+            >
+              <Button
+                onClick={handleGeneratePDF}
+                className="flex-1 gradient-bg text-white hover:shadow-lg transition-all duration-300"
+                size="lg"
+              >
+                <Download className="mr-2 h-5 w-5" />
+                Gerar PDF
+              </Button>
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className="flex-1 hover:bg-green-50 border-green-300"
+                size="lg"
+              >
+                <Share2 className="mr-2 h-5 w-5" />
+                Compartilhar
+              </Button>
+              <Button
+                onClick={() => setShowPreview(!showPreview)}
+                variant="outline"
+                className="lg:hidden"
+                size="lg"
+              >
+                {showPreview ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </Button>
+            </motion.div>
           </motion.div>
 
           {/* Preview */}
@@ -581,7 +335,7 @@ Para mais detalhes, vamos conversar!`;
               </CardHeader>
               <CardContent>
                 <div className="max-h-[600px] overflow-y-auto">
-                  <ProposalPreview data={formData} />
+                  <ProposalPreviewWrapper data={formData} isVisible={showPreview} />
                 </div>
               </CardContent>
             </Card>
