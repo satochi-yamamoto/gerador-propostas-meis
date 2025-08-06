@@ -346,24 +346,22 @@ Para mais detalhes, vamos conversar!`;
         <footer className="mt-12 text-center text-sm text-gray-500">
           <div className="flex flex-wrap justify-center gap-4 mb-4">
             <a 
-              href="/privacy-policy" 
+              href="#privacy-policy" 
               className="hover:text-blue-600 transition-colors"
               onClick={(e) => {
                 e.preventDefault();
-                // Para SPA, você pode implementar roteamento aqui
-                alert('Implementar roteamento para /privacy-policy');
+                window.location.hash = 'privacy-policy';
               }}
             >
               Política de Privacidade
             </a>
             <span>•</span>
             <a 
-              href="/terms-of-service" 
+              href="#terms-of-service" 
               className="hover:text-blue-600 transition-colors"
               onClick={(e) => {
                 e.preventDefault();
-                // Para SPA, você pode implementar roteamento aqui
-                alert('Implementar roteamento para /terms-of-service');
+                window.location.hash = 'terms-of-service';
               }}
             >
               Termos de Uso
@@ -379,6 +377,9 @@ Para mais detalhes, vamos conversar!`;
             </a>
           </div>
           <p>© 2025 Gerador de Propostas MEI - Ferramenta gratuita para microempreendedores</p>
+          <p className="mt-2 text-xs text-gray-400">
+            🔒 Todos os seus dados são armazenados apenas no seu navegador. Nenhuma informação é enviada para nossos servidores.
+          </p>
         </footer>
       </div>
     </div>
