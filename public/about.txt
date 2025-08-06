@@ -1,0 +1,37 @@
+# Gerador de Propostas MEI
+
+## Sobre a Aplicação
+Aplicação web moderna para criação de propostas comerciais profissionais especificamente desenvolvida para Microempreendedores Individuais (MEI). 
+
+**URL de produção:** https://gerador-propostas-meis.vercel.app
+
+## Funcionalidades Principais
+- Criação de propostas comerciais personalizadas
+- Upload de logotipo empresarial
+- Personalização de cores
+- Geração de PDF profissional
+- Compartilhamento via WhatsApp
+- Interface totalmente responsiva
+
+## Tecnologias
+- React 18
+- Vite
+- Tailwind CSS
+- Radix UI
+- jsPDF
+- Vercel Analytics
+
+## Conformidade e Políticas
+- ✅ Política de Privacidade em conformidade com LGPD
+- ✅ Termos de Uso específicos para a aplicação
+- ✅ Otimizado para SEO e Google AdSense
+- ✅ Acessibilidade WCAG 2.1 AA
+
+## Performance
+- Core Web Vitals otimizados
+- Lazy loading implementado
+- Code splitting automático
+- Compressão de assets
+
+## Suporte
+Para questões técnicas ou sugestões, utilize o sistema de Issues do GitHub.

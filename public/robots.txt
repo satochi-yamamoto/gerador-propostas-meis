@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /*.json
+Disallow: /node_modules/
+Disallow: /src/
+
+# Sitemap
+Sitemap: https://gerador-propostas-meis.vercel.app/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Host specification
+Host: https://gerador-propostas-meis.vercel.app
+
+# Specific bot instructions
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2

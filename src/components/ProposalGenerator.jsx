@@ -341,6 +341,45 @@ Para mais detalhes, vamos conversar!`;
             </Card>
           </motion.div>
         </div>
+        
+        {/* Footer */}
+        <footer className="mt-12 text-center text-sm text-gray-500">
+          <div className="flex flex-wrap justify-center gap-4 mb-4">
+            <a 
+              href="/privacy-policy" 
+              className="hover:text-blue-600 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                // Para SPA, você pode implementar roteamento aqui
+                alert('Implementar roteamento para /privacy-policy');
+              }}
+            >
+              Política de Privacidade
+            </a>
+            <span>•</span>
+            <a 
+              href="/terms-of-service" 
+              className="hover:text-blue-600 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                // Para SPA, você pode implementar roteamento aqui
+                alert('Implementar roteamento para /terms-of-service');
+              }}
+            >
+              Termos de Uso
+            </a>
+            <span>•</span>
+            <a 
+              href="https://github.com/satochi-yamamoto/gerador-propostas-meis" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-blue-600 transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
+          <p>© 2025 Gerador de Propostas MEI - Ferramenta gratuita para microempreendedores</p>
+        </footer>
       </div>
     </div>
   );
